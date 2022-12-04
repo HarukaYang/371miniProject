@@ -76,27 +76,28 @@ def start_socket(port):
 
         # Get the content of the file
         try:
-            target_path = request_method_list[1]
-            if target_path == '/test.html':
+            resourceName = request_method_list[1]
+            if resourceName == '/test.html':
                 resourceName = 'test.html'
-                fin = open(resourceName)
-                content = fin.read()
-                fin.close()
+
                 # 304 response code
                 flag = 'If-Modified-Since'
                 if flag in header_fields_dict.keys():
                     client_mod_date = header_fields_dict[flag]
                     server_mod_date = modified_dates[resourceName]
-                    print(client_mod_date, server_mod_date)
+                    print("last_modified:", server_mod_date)
                     is_latest = datetime.strptime(client_mod_date, '%a, %d %b %Y %H:%M:%S GMT') > datetime.strptime(server_mod_date, '%a, %d %b %Y %H:%M:%S GMT')
-                    print(is_latest)
                     if is_latest:
-                        response = 'HTTP/1.1 304 OK\n\n'
+                        response = 'HTTP/1.1 304 Not Modified\n\n'
                         connectionSocket.sendall(response.encode())
                         connectionSocket.close()
                         continue
-                response = 'HTTP/1.1 200 OK\n\n'
-                response += content
+            # Read resource and add it to the response
+            fin = open(resourceName)
+            content = fin.read()
+            fin.close()
+            response = 'HTTP/1.1 200 OK\n\n'
+            response += content
 
         # Handle file not found error
         except FileNotFoundError:
@@ -115,5 +116,4 @@ def start_socket(port):
 
 
 if __name__ == '__main__':
-
     start_socket(serverPort)
