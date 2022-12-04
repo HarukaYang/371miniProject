@@ -13,33 +13,54 @@ modified_dates = {
     'test.html': strTimestamp
 }
 
-def parse_request(request):
-    """
-    Parse HTTP request
 
-    :param request:
-    :return: request method list and header fields
+def parse_method(all_fields):
     """
-    # Split http request into list of fields
-    fields = request.split("\r\n")
+    Get the request method fields
+    """
 
-    # Get the request method fields
-    request_method = fields[0]
+    request_method = all_fields[0]
     request_method_list = request_method.split(' ')
+
     print("Request methods:")
     print(request_method_list)
 
-    # Get only the header fields, not GET, filenames and HTTP version... etc
-    header_fields = fields[1:]
+    return request_method_list
+
+
+def parse_header_fields(all_fields):
+    """
+    Get only the header fields, not GET, filenames and HTTP version... etc
+    """
+    header_fields = all_fields[1:]
     header_fields_dict = {}
+
     for field in header_fields:
         # check for invalid field
         if not field:
             continue
         key, value = field.split(': ', 1)
         header_fields_dict[key] = value
+
     print("Request headers:")
     print(header_fields_dict)
+
+    return header_fields_dict
+
+
+def parse_request(request):
+    """
+    Parse HTTP request
+
+    :param request:
+    :return: request method list and header fields
+
+    """
+    # Split http request into list of fields
+    all_fields = request.split("\r\n")
+    request_method_list = parse_method(all_fields)
+    header_fields_dict = parse_header_fields(all_fields)
+
     return request_method_list, header_fields_dict
 
 
@@ -86,7 +107,8 @@ def start_socket(port):
                     client_mod_date = header_fields_dict[flag]
                     server_mod_date = modified_dates[resourceName]
                     print("last_modified:", server_mod_date)
-                    is_latest = datetime.strptime(client_mod_date, '%a, %d %b %Y %H:%M:%S GMT') > datetime.strptime(server_mod_date, '%a, %d %b %Y %H:%M:%S GMT')
+                    is_latest = datetime.strptime(client_mod_date, '%a, %d %b %Y %H:%M:%S GMT') > datetime.strptime(
+                        server_mod_date, '%a, %d %b %Y %H:%M:%S GMT')
                     if is_latest:
                         response = 'HTTP/1.1 304 Not Modified\n\n'
                         connectionSocket.sendall(response.encode())
