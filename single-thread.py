@@ -1,5 +1,6 @@
 from socket import *
 from datetime import datetime, timedelta
+import time
 import socket as soc
 import ast
 
@@ -7,6 +8,8 @@ import ast
 serverPort = 8000
 timestamp = datetime.utcnow() + timedelta(seconds=60)
 strTimestamp = timestamp.strftime('%a, %d %b %Y %H:%M:%S GMT')
+
+TIMEOUT_IN_SEC = 5
 
 # This is a dict storing all last-modified-date of resources
 modified_dates = {
@@ -75,9 +78,27 @@ def start_socket(port):
         connectionSocket, addr = serverSocket.accept()
 
         print("connection starts")
+        deadline = time.time() + TIMEOUT_IN_SEC
         # Get the client request
-        request = connectionSocket.recv(1024).decode()
+        is_time_out = False
 
+        while True:
+            if time.time() > deadline:
+                response = 'HTTP/1.0 408 REQUEST TIMEOUT\n\n'
+                connectionSocket.sendall(response.encode())
+                time.sleep(5)
+                connectionSocket.close()
+                print("connection closed")
+                print("---------------------------------------------")
+                is_time_out = True
+                break
+            if not is_time_out:
+                request = connectionSocket.recv(1024).decode()
+                if request:
+                    break
+
+        if is_time_out:
+            continue
         response = ''
         request_method_list, header_fields_dict = parse_request(request)
 
@@ -85,7 +106,7 @@ def start_socket(port):
         # Check if the request method is valid
         valid_request_methods = ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTION', 'TRACE', 'PATCH']
         current_method = request_method_list[0]
-        # Check for invalid headers, if header is invalid, responde with 400 BAD REQUEST and close connection
+        # Check for invalid headers, if header is invalid, respond with 400 BAD REQUEST and close connection
         if 'Host' not in header_fields_dict.keys() \
                 or len(header_fields_dict) < 1 \
                 or current_method not in valid_request_methods:
@@ -135,6 +156,8 @@ def start_socket(port):
         connectionSocket.close()
         print("connection closed")
         print("---------------------------------------------")
+
+
 
 
 if __name__ == '__main__':

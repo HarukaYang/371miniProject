@@ -1,4 +1,5 @@
 import socket
+import time
 from datetime import datetime, timedelta
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -18,6 +19,7 @@ request += headers
 print("Test request:")
 print(request)
 
+time.sleep(6)
 s.sendall(request.encode())
 response = s.recv(4096)
 
