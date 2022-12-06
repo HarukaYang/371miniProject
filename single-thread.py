@@ -142,6 +142,10 @@ def start_socket(port):
             response = 'HTTP/1.1 200 OK\n\n'
             response += content
 
+            if 'modified_date' in header_fields_dict.keys():
+                response = modified_dates[resourceName]
+
+
         # Handle file not found error
         except FileNotFoundError:
             response = 'HTTP/1.0 404 NOT FOUND\n\n'
