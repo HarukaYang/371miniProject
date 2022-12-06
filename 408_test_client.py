@@ -19,7 +19,7 @@ request += headers
 print("Test request:")
 print(request)
 
-time.sleep(6)
+time.sleep(7)
 s.sendall(request.encode())
 response = s.recv(4096)
 

@@ -83,7 +83,7 @@ def start_socket(port):
         is_time_out = False
 
         while True:
-            if time.time() > deadline:
+            if time.time() >= deadline:
                 response = 'HTTP/1.0 408 REQUEST TIMEOUT\n\n'
                 connectionSocket.sendall(response.encode())
                 time.sleep(5)
@@ -94,8 +94,18 @@ def start_socket(port):
                 break
             if not is_time_out:
                 request = connectionSocket.recv(1024).decode()
-                if request:
+                if time.time() >= deadline:
+                    response = 'HTTP/1.0 408 REQUEST TIMEOUT\n\n'
+                    connectionSocket.sendall(response.encode())
+                    time.sleep(5)
+                    connectionSocket.close()
+                    print("connection closed")
+                    print("---------------------------------------------")
+                    is_time_out = True
                     break
+                else:
+                    if request:
+                        break
 
         if is_time_out:
             continue

@@ -11,7 +11,7 @@ STR_TIMESTAMP = TIMESTAMP.strftime('%a, %d %b %Y %H:%M:%S GMT')
 
 SERVER_ADDRESS = ('localhost', 8000)
 
-TIMEOUT_IN_SEC = 5000
+TIMEOUT_IN_SEC = 5
 
 
 
@@ -146,11 +146,15 @@ def start_socket(port):
             content = None
 
             if cache['is_cached']:
-                is_latest_from_server = check_cache(request, cache['timestamp'])
+                is_latest_from_server, content = check_cache(request, cache['timestamp'])
                 if is_latest_from_server:
                     content = cache['content']
+                else:
+                    timestamp = datetime.utcnow() + timedelta(seconds=60)
+                    cache['timestamp'] = timestamp.strftime('%a, %d %b %Y %H:%M:%S GMT')
+                    cache['content'] = content
 
-            if (not cache['is_cached']) or (not is_latest_from_server):
+            if not cache['is_cached']:
                 content = get_from_server(request)
                 cache['is_cached'] = True
                 timestamp = datetime.utcnow() + timedelta(seconds=60)
